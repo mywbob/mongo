@@ -483,7 +483,7 @@ void MongoC::saveDataState(string database, string collection, string instanceId
 			catch(...)
 			{
 				ISFAILED = true;
-				cout << "whatever exception, insert instance state failed: " << endl;
+				cout << "exception, insert instance state failed: " << endl;
 				cout << "trying to reconnect" << endl;
 				mongoDbConnect(this->address, this->port);
 			}
