@@ -32,11 +32,9 @@ void toByteArray_htons(short value, Byte * barr) {
 
 void toByteArray_htond(double value, Byte * barr) {
 	if (htonl((int)123) == ((int)123)) {//	check endianness
-			//cout << "big endian" << endl; 
 			memcpy (barr, &value, sizeof(value));
-	}//big endian no need to change order
+	}//big endian
 	else {
-		//cout << "little endian" << endl;
 		memcpy (barr, &value, sizeof(value));
 		Byte temp;//1, 2, 3, 4, 5, 6, 7, 8
 		memcpy (&temp, barr, sizeof(Byte));
@@ -56,9 +54,8 @@ void toByteArray_htond(double value, Byte * barr) {
 
 void toByteArray_htonll(long long value, Byte * barr) {
 	if (htonl((int)123) == ((int)123)) {
-		//cout << "big endian" << endl; 
 		memcpy (barr, &value, sizeof(value));
-	}//big endian no need to change order
+	}//big endian
 	else {
 		//cout << "little endian" << endl;
 		memcpy (barr, &value, sizeof(value));
@@ -86,7 +83,7 @@ std::vector<std::string> tokenize(const std::string & str, const std::string & d
   size_t p0 = 0, p1 = string::npos;//npos is the end of strings 
   while(p0 != string::npos)
   {
-    p1 = str.find_first_of(delim, p0);// find first delim at/after p0, not before
+    p1 = str.find_first_of(delim, p0);
     if(p1 != p0)
     {
       string token = str.substr(p0, p1 - p0);
@@ -98,7 +95,7 @@ std::vector<std::string> tokenize(const std::string & str, const std::string & d
 }
 
 
-bool getLineData(const std::string & str, const std::string & delim, vector<string> &linevec, std::string dp) //where to return false to tell an error? s in dp but no double quote may product an error
+bool getLineData(const std::string & str, const std::string & delim, vector<string> &linevec, std::string dp) 
 {
 		std::vector<std::string> tempForString;
 		std::string numStr = "";
@@ -128,30 +125,7 @@ bool getLineData(const std::string & str, const std::string & delim, vector<stri
 
 		//split the long string by " "(space), to get a list of number
 		std::vector<std::string> tempForNum = tokenize( numStr, " " );
-		
-		
-		//debug printf
-		/*
-		printf("\nsplit by double quote size %d\n", tokens.size());
-		for( int x=0;x<tokens.size();x++)
-		{
-			std::cout << tokens[x] << std::endl;
-		}
-		
-		printf("\ntempForString size %d\n", tempForString.size());
-		for( int x=0;x<tempForString.size();x++)
-		{
-			std::cout << tempForString[x] << std::endl;
-		}
-		
-		printf("\ntempForNum size %d\n", tempForNum.size());
-		for( int x=0;x<tempForNum.size();x++)
-		{
-			std::cout << tempForNum[x] << std::endl;
-		}
-		*/
 			
-		
 		//combine tempForString and tempForNum in the right order, same as datapattern...and return it
 		int strIndex = 0;
 		int numIndex = 0;
@@ -164,21 +138,11 @@ bool getLineData(const std::string & str, const std::string & delim, vector<stri
 				linevec.push_back(tempForNum[numIndex++]);
 			}
 		}
-
-		
-		//debug printf
-		/*
-		printf("\nthe output size %d\n", linevec.size());
-		for( int x=0;x<linevec.size();x++)
-		{
-			std::cout << linevec[x] << std::endl;
-		}
-		*/
 		
 		return true;
 }
 
-bool readFileOfNumbersAndStrings(string source_file, vector<vector <string> > &dataVec, int &numOfRows, int &numOfCols, string dataPattern) {//after read, numOfRows, numOfCols with right number
+bool readFileOfNumbersAndStrings(string source_file, vector<vector <string> > &dataVec, int &numOfRows, int &numOfCols, string dataPattern) {
 	ifstream filein;
 	filein.open(source_file.c_str(), ios::in);
 	if (!filein.is_open())
@@ -223,7 +187,6 @@ bool readFileOfNumbersAndStrings(string source_file, vector<vector <string> > &d
 void twodVec2CompressedByteArrays(vector< vector<string> > &dataVec, int row, int col, string dp, vector<Byte *> &byteArrays, vector<int> &lengthOfCompressedArrays) {//right row col here, use them	
 	//DEBUG:val
 	int printHelper = 0;
-	
 	
 	//convert the 2d vector data to byte array then compress col by col
 	for (int x = 0; x< dp.length(); x++) {
@@ -293,7 +256,6 @@ void twodVec2CompressedByteArrays(vector< vector<string> > &dataVec, int row, in
 
 				//byte array to be compressed
 				for (int i=0; i<row;i++) {
-					//!!!!!!!!!!!!change endianness if neceassry, seems I do not need to 
 					Byte * strBytes = (Byte *)(dataVec[x][i].data());
 					toByteArray_htons((short) stringLens[i], barr);
 					memcpy(tempByteArray + pos, barr, sizeof(short));
@@ -315,7 +277,6 @@ void twodVec2CompressedByteArrays(vector< vector<string> > &dataVec, int row, in
 
 				//byte array to be compressed
 				for (int i=0; i<row;i++) {
-					//!!!!!!!!!!!!change endianness if neceassry, seems I do not need to 
 					Byte * strBytes = (Byte *)(dataVec[x][i].data());
 					toByteArray_htoni((int) stringLens[i], barr);
 					memcpy(tempByteArray + pos, barr, sizeof(int));
@@ -333,43 +294,12 @@ void twodVec2CompressedByteArrays(vector< vector<string> > &dataVec, int row, in
 		Byte* byteArray = new Byte[len+20]; // output stored here, delete outside
 		int lengthOfCompressedByteArray;
 		compressData(tempByteArray, len, byteArray, lengthOfCompressedByteArray);	
-		
-		
-		/*
-		//DEBUG:print the org byte[]
-		cout << "print the org byte[] " << len << endl;
-		for (int cc = 0; cc< len; cc++) {
-			printf("%d", tempByteArray[cc] & 0xff);
-		}
-		cout << endl;
-		
-		//DEBUG:print the compressed byte[]
-		cout << "print the compressed byte[] " << lengthOfCompressedByteArray << endl;
-		for (int cc = 0; cc< lengthOfCompressedByteArray; cc++) {
-			printf("%d", byteArray[cc] & 0xff);
-		}
-		cout << endl;
-		*/
-		
+				
 		
 		//add this col of compressed data to my buffer
 		byteArrays.push_back(byteArray);
 		lengthOfCompressedArrays.push_back(lengthOfCompressedByteArray);
 		
-		
-		/*
-		//DEBUG:print the compressed byte[] 
-		cout << "!!!!!!!!!!!!!compressed byte[] in vector" << endl;
-		for (int cc = 0; cc< lengthOfCompressedArrays[printHelper]; cc++) {
-			printf("%d", *(byteArrays[printHelper] + cc) & 0xff);
-		}
-		cout << endl;
-		
-		//DEBUG:val
-		printHelper++;
-		*/
-		
-
 		delete [] tempByteArray;
 	}
 }
@@ -418,15 +348,6 @@ bool compressedDataToFile(vector<Byte *> &byteArrays, vector<int> &lengthOfCompr
 		//write data
 		out.write((char *)&(byteArrays[i])[0], lengthOfCompressedArrays[i] * sizeof(Byte));
 		
-		/*
-		//DEBUG:compressed byte []
-		cout << "!!!!!!!!!!!!!compressed byte[] in vector, in write to file " << lengthOfCompressedArrays[i] << endl;
-		for (int cc = 0; cc< lengthOfCompressedArrays[i]; cc++) {
-			printf("%d", *(byteArrays[i] + cc) & 0xff);
-		}
-		cout << endl;
-		*/
-
 	}
 	
 	out.close();

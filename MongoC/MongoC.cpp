@@ -25,7 +25,7 @@ MongoC::MongoC(string addr, string port) {
 
 
 
-void MongoC::mongoDbConnect(string addr, string port) {//do not know how to use autoreconnect with scopeddbconnection(), so i call this function to reconnect
+void MongoC::mongoDbConnect(string addr, string port) {//reconnect
 	ScopedDbConnection* pool;
 	string hostInfo = addr + ":" + port;
 	int numOfTry = 1000;
@@ -66,7 +66,7 @@ void MongoC::mongoDbConnect(string addr, string port) {//do not know how to use 
 		}
 		catch(...)
 		{
-			cout << "whatever it is" << endl;
+			cout << "Unknown" << endl;
 			cout << numOfTry << " try left to exit" << endl;
 			sleep(sleepTime);
 			if (numOfTry == 0) exit (EXIT_FAILURE);
@@ -89,14 +89,10 @@ void MongoC::file2Mongo(string fileName, string database, string collection,  st
 	else
 	{
 		cout << "Error opening file" << endl;
-		// !!!!!!!!!!!!!!!!!!!!!!!!!!!then what?
-		//return it for now
 		return;
 	}
 	vector<Byte *> byteArrays;
 	vector<int> lengthOfCompressedArrays;
-	
-	
 	
 	int versionNum, dpLen;
 	
@@ -111,8 +107,7 @@ void MongoC::file2Mongo(string fileName, string database, string collection,  st
 	//read data pattern
 	in.read((char *)&charsInDp, dpLen);
 	
-	string dp(charsInDp, dpLen);//char array is not null teminate, so use this constructor to convert char[] to string
-
+	string dp(charsInDp, dpLen);
 
 	int numOfCols = dpLen;
 	for (int i=0;i<numOfCols;i++) {
@@ -125,25 +120,11 @@ void MongoC::file2Mongo(string fileName, string database, string collection,  st
 		//read data
 		in.read((char *)&temparr[0], templen * sizeof(Byte));
 		byteArrays.push_back(temparr);
-
-		
-		//BEBUG:print the byte [] 
-		/*
-		cout << "!!!!!!!!!!!!!compressed byte[] in vector, in read from file " << lengthOfCompressedArrays[i] << endl;
-		for (int cc = 0; cc< lengthOfCompressedArrays[i]; cc++) {
-			//printf("%d", *(byteArrays[0] + cc) & 0xff);
-			printf("%d", *(byteArrays[i] + cc) & 0xff);
-		}
-		cout << endl;
-		*/
-
-
 	}
 	in.close();
 	
 	byteArrays2Mongo(byteArrays, lengthOfCompressedArrays, database, collection, instanceId, dp, startTime, endTime, customerId);// byteArrays delete inside
 	
-
 }
 
 
@@ -173,13 +154,7 @@ void MongoC::byteArrays2Mongo(vector<Byte *> &byteArrays, vector<int> &lengthOfC
 	
 	
 	this->metaDataObj = b.obj();
-	
-
 	string dbAndColl = database + "." + collection;
-	// need to catch errors. One error is that the connection with mongo ahs broken. In this case, you need to reconnect with mongo and try again. If it fails again, then sleep, reconnect and try again. Depending on the value of a member variable, it can repeatedly sleep, reconnect and try again, or it cna stop trying after N attempts. Idealy, it will send an email it is gives up and/or it has tried 10 times and it still trying
-	//can use conn->isFailed() to see if connection is good, or use getlasterror to see if there is an error? then try to reconnect
-	//see if insert successed, https://github.com/mongodb/mongo/blob/master/src/mongo/client/simple_client_demo.cpp
-
 
 	bool ISFAILED;
 	do {
@@ -218,7 +193,7 @@ void MongoC::byteArrays2Mongo(vector<Byte *> &byteArrays, vector<int> &lengthOfC
 		catch(...)
 		{
 			ISFAILED = true;
-			cout << "whatever exception, insert failed: " << endl;
+			cout << "UnKnown: " << endl;
 			cout << "trying to reconnect" << endl;
 			mongoDbConnect(this->address, this->port);
 
@@ -229,12 +204,11 @@ void MongoC::byteArrays2Mongo(vector<Byte *> &byteArrays, vector<int> &lengthOfC
 
 	this->poolPtr->done(); 
 
-	//saveDataState, comment the below line out if you do not need it
 	saveDataState(database, collection, instanceId, customerId, startTime, endTime);
 
 	//delete byteArrays
 	for (int i=0;i<byteArrays.size();i++) {
-		delete [] byteArrays[i]; //? is this right?
+		delete [] byteArrays[i];
 	}
 	
 	delete this->poolPtr;
@@ -265,8 +239,7 @@ void MongoC::saveDataState(string database, string collection, string instanceId
 	searchQuery = BSONObjBuilder().append(INSTANCE_ID, instanceId).obj();
 	BSONObj obj = conn->findOne(dbAndColl, searchQuery);
 
-	if(!obj.isEmpty()) {// obj != Null
-		//long oldEt = ((BasicDBObject) obj).getLong(END_TIME,-1);//if no endtime field, then return -1, otherwise return the value
+	if(!obj.isEmpty()) {
 		BSONElement elem;
 		long long oldEt;
 		long long oldSt;
@@ -347,8 +320,7 @@ void MongoC::saveDataState(string database, string collection, string instanceId
 			buildNewDocument.append(ASSET_ID, assetId);		
 		}
 
-		//http://docs.mongodb.org/manual/reference/method/db.collection.update/
-		if (true) {//if (newDocument!=null) in java
+		if (true) {
 			buildNewDocument.append(CUSTOMER_ID, customerId);
 			BSONObj updateObj = BSONObjBuilder().append("$set", buildNewDocument.obj()).obj();
 
@@ -517,9 +489,6 @@ void MongoC::saveDataState(string database, string collection, string instanceId
 			}
 			
 		} while(ISFAILED);
-
-
-
 
 		this->poolPtr->done();
 

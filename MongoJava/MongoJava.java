@@ -51,9 +51,8 @@ public class MongoJava {
 		}// parse string to date;
 		return t;	
 	}
-
-
-	//maybe use java generic method later
+	
+	//reduce dup code
 	public static byte[] toByteArray(float value) {//float to byte array
 		byte[] bytes = new byte[4];
 		ByteBuffer.wrap(bytes).putFloat(value);
@@ -134,43 +133,6 @@ public class MongoJava {
 	private static Hashtable<String, MongoClient> hashTable = new Hashtable<String, MongoClient>();//each mongoclient for a single host
 
 
-
-	/* use below to ping db before any db operation if you want.
-	try {//check connection is ok before any DB operation
-		connectionInfos.getConnector().getDBPortPool(connectionInfos.getAddress()).get().ensureOpen();
-	} catch (IOException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
-	}
-	 */
-
-
-
-	/* use below to autoreconnect 
-	boolean reTry = false;
-	do {//protect the db operation, if any exception raise, just sleep and hope the auto reconnect works
-		try {
-			//the code you need to protect
-
-			reTry = false;
-
-		} catch (Exception e) {
-			e.printStackTrace();
-			//sleep
-			System.out.println("sleep 5 secs, waiting autoreconnect");
-			try {//program wait 5 secs, hope the auto reconnect works
-				Thread.sleep(5000);
-			} catch (InterruptedException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-
-			reTry = true;
-		}
-	} while (reTry);
-	 */
-
-
 	//only one constructor for connecting
 	public MongoJava(String addr, int port) {
 		this.address = addr;
@@ -179,9 +141,6 @@ public class MongoJava {
 	}
 
 
-
-	//http://stackoverflow.com/questions/6520439/how-to-configure-mongodb-java-driver-mongooptions-for-production-use
-	//http://blog.mongolab.com/2013/11/deep-dive-into-connection-pooling/	
 	public void mongoDbConnect(String addr, int port){//this can not keep connections for multi hosts, maybe need to make many instances
 		String connectionPointString = new String();
 		connectionPointString = "/" + addr + ":" + port;
@@ -279,9 +238,7 @@ public class MongoJava {
 
 
 
-	public ArrayList<TheData> mongoDbLoadObjGzip(String db, String coll, String id, long st, long et, int[] colsToGet)
-	//String instanceIdToGet, long startTimeToGet, long endTimeToGet) 
-	{// load files in range [startDateToGet, endDateToGet]
+	public ArrayList<TheData> mongoDbLoadObjGzip(String db, String coll, String id, long st, long et, int[] colsToGet) {// load files in range [startDateToGet, endDateToGet]
 
 		//result list
 		ArrayList<TheData> res = new ArrayList<TheData>();
@@ -305,12 +262,9 @@ public class MongoJava {
 				if (true)//SHOW)
 					System.out.println("instance: "+instanceId+" start time: "+startTimeToGet+" end time: "+ endTimeToGet);
 
-
 				// start_time<st && end_time>st 
 				// || start_time==st
 				// || start_time>st && start_time<et
-
-
 
 				//query
 				DBCursor dataForOutputList;
@@ -339,7 +293,6 @@ public class MongoJava {
 
 
 					if (true)
-						//System.out.println("got "+ (BasicDBObject)f.get("instance_id") + " start " + (BasicDBObject)f.get("start_time") + " end " + (BasicDBObject)f.get("end_time") );
 						System.out.println("got "+ f.get("instance_id") + " start " + f.get("start_time") + " end " + f.get("end_time") );
 
 
@@ -352,15 +305,6 @@ public class MongoJava {
 							InputStream in = new ByteArrayInputStream((byte[]) f.get("binData" + l));
 							resDp.append(dp.charAt(l));
 
-							/*
-							//print the byte[]
-							byte[] tempinput = (byte[]) f.get("binData" + l);
-							System.out.println("the byte array is " + tempinput.length);
-							for (int i = 0 ; i < tempinput.length; i++) {
-								System.out.print(tempinput[i] & 0xff);
-							}
-							System.out.println();
-							 */
 
 							if (dp.charAt(l)== 'i') {//load int
 								GZIPInputStream gis =null;
@@ -494,9 +438,7 @@ public class MongoJava {
 	}
 
 
-	public ArrayList<float []> mongoDbLoadFloatGzip(String db, String coll, String id, long st, long et)
-	//String instanceIdToGet, long startTimeToGet, long endTimeToGet) 
-	{// load files in range [startDateToGet, endDateToGet]
+	public ArrayList<float []> mongoDbLoadFloatGzip(String db, String coll, String id, long st, long et) {// load files in range [startDateToGet, endDateToGet]
 
 		//result list
 		ArrayList<float []> res = null; 
@@ -520,21 +462,6 @@ public class MongoJava {
 
 				if (true)//SHOW)
 					System.out.println("instance: "+instanceId+" start time: "+startTimeToGet+" end time: "+ endTimeToGet);
-
-				// start_time<st && end_time>st 
-				// || start_time==st
-				// || start_time>st && start_time<et
-
-				/*
-				System.out.println("sleep 10");
-				try {//program wait 5 secs, hope the auto reconnect works
-					Thread.sleep(10000);
-				} catch (InterruptedException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-				 */
-
 
 				DBCursor dataForOutputList;
 				if (endTimeToGet!=0) {	
@@ -562,23 +489,11 @@ public class MongoJava {
 					ArrayList<Float> outputData = new ArrayList<Float>(); 
 
 					if (true)
-						//System.out.println("got "+ (BasicDBObject)f.get("instance_id") + " start " + (BasicDBObject)f.get("start_time") + " end " + (BasicDBObject)f.get("end_time") );
 						System.out.println("got "+ f.get("instance_id") + " start " + f.get("start_time") + " end " + f.get("end_time") );
 
 
 					for (int j=0; j< col; j++) {
 						InputStream in = new ByteArrayInputStream((byte[]) f.get("binData" + j));
-
-						//print the byte[]
-						/*
-						byte[] testTheBinData = (byte[]) f.get("binData" + j);
-						System.out.println("the byte array is");
-						for (int i = 0 ; i < testTheBinData.length; i++) {
-							System.out.print(testTheBinData[i] & 0xff);
-						}
-						System.out.println();
-						 */ 
-
 
 						//unzip the data back
 						GZIPInputStream gis =null;
@@ -587,7 +502,6 @@ public class MongoJava {
 							byte[] tempbytes = new byte[4];
 							while (gis.read(tempbytes, 0 , 4 ) != -1) {
 								float tempfloat = ByteBuffer.wrap(tempbytes).getFloat();
-								//System.out.println("col data " + tempfloat);
 								outputData.add(tempfloat);
 							}
 							gis.close();
@@ -725,13 +639,8 @@ public class MongoJava {
 		this.instanceId = id;
 		this.startTime = st;
 		this.endTime = et;
-
-
-
-
 		this.metaDataObj = new BasicDBObject("instance_id", instanceId).append("start_time", startTime)
 				.append("end_time", endTime).append("data_pattern", dataPattern)
-				//.append("num_of_rows", numOfRows).append("num_of_cols", numOfCols).append("prefix", preFix)
 				.append("customer_id", customerId);
 
 		System.out.println(dataPattern + " " + dataPattern.length());
@@ -784,7 +693,6 @@ public class MongoJava {
 				else {typeSize = 4;}//for long string, text ,int 4 bytes
 
 				for (int i=0;i<numOfRows;i++){//convert each string to byte[] for one col
-					//byte[] strBytes = inputStr[strColCnt* numOfRows + i].getBytes(); //string to byte array, UTF-8?
 					stringLens[i] = inStr[indexStr].length();
 					totalBytes += inStr[indexStr++].length() + typeSize;
 				}
@@ -835,8 +743,7 @@ public class MongoJava {
 			try {
 				writeResult = connectionInfos.getDB(this.database).getCollection(this.collection).insert(metaDataObj);
 			}
-			catch (Exception e){//all the exception, may not a good idea, but do not know how to catch socket exception
-				//System.out.println("last error is " + writeResult.getError());//null exception if try faild
+			catch (Exception e){//all the exception, may not a good idea
 				e.printStackTrace();
 				System.out.println("trying to reconnect...");
 				try {//program wait 5 secs, hope the auto reconnect works
@@ -852,106 +759,6 @@ public class MongoJava {
 
 
 	public static void main(String[] args) { 
-		/*
-		System.out.println("sleep 10");
-		try {//program wait 5 secs, hope the auto reconnect works
-			Thread.sleep(10000);
-		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-
-
-		MongoJava testsave1 = new MongoJava("128.4.30.3", 29000);
-		testsave1.mongoDbSaveGzip("testdb", "testcoll", "testpf", 2, 2, testinput, "1234", 2013, 2014, 0);
-		System.out.println("done");
-		 */
-
-		/*
-		StoreInstanceState teststate = new StoreInstanceState("128.4.30.3", 29000, "testdb_instance_state", "testcoll", "1234", 0, 2013, 2014);
-		teststate.SaveDataState();
-
-		StoreInstanceState teststate1 = new StoreInstanceState("128.4.30.3", 29000, "testdb_instance_state", "testcoll", "1234", 0, 2013, 2014);
-		teststate1.SaveDataState();
-		 */
-
-
-		/*
-		MongoJava testload = new MongoJava("128.4.30.3", 29000);
-
-		ArrayList<float []> res = new ArrayList<float []>();
-		res = testload.mongoDbLoadRangeGzip("testdb", "testcoll", "1234", 2013, 2014);
-
-		System.out.println(res.size()+ " things loaded");
-		for (int i = 0 ;i < res.size(); i++) {
-			for (int j = 0; j < res.get(i).length; j++) {
-				System.out.println(res.get(i)[j]);
-			}
-		}
-
-		System.out.println("done");
-		 */
-
-
-
-
-		/*
-		//test save multi types
-		String[] inputStr = new String[] {"1.1", "2.2", "3.3", "4.4", "5", "6", "7", "8","string1 string2", "string3 string4","text1 text2",  "text3 text4"};
-		MongoJava testsave = new MongoJava("128.4.30.3", 29000);
-		testsave.mongoDbSaveGzip("testdb", "testcoll", "testpf", 2, 6, "dfilst", inputStr, "1234", 2014, 2015, 0);
-		System.out.println("done");
-		*/
-
-		/*
-		//test load multi types
-		ArrayList<TheData> res = new ArrayList<TheData>();
-		MongoJava testload = new MongoJava("128.4.30.3", 29000);
-		int[] querycols = new int[] {1,1,1,1,1,1};
-		//testload.mongoDbLoad("testdb", "testcoll", "1234", 2013, 2014, 4);
-		res = testload.mongoDbLoadObjGzip("testdb", "testcoll", "5678", 0, 2000000000, querycols);
-		//res = testload.mongoDbLoad("testdb", "testcoll", "5678", 1, 2);
-		//res = testload.mongoDbLoadObj("testdb", "testcoll", "911", 2013, 2015, querycols);
-		//res = testload.mongoDbLoadObj("systemdiskinfo", "coll", "i-0a0c0e69", 0, 2000000000, querycols);
-
-		for (int i = 0 ;i < res.size(); i++) {
-			System.out.println(res.get(i).getNum());
-			System.out.println(res.get(i));
-			System.out.println(res.get(i).getDp());
-		}
-
-		System.out.println("done");
-		*/
-
-		
-		/*
-		//test save float
-		float[] input = new float[] {(float) 1.1,(float) 2.2,(float) 3.3,(float) 4.4};
-		MongoJava testsave = new MongoJava("128.4.30.3", 29000);
-		testsave.mongoDbSaveFloatGzip("testdb", "testcoll", 2, 2, "ff", input, "1234", 2013, 2014, 0);
-
-		System.out.println("saved");
-		
-
-
-		//test load float
-		ArrayList<float[]> res = new ArrayList<float[]>();
-		MongoJava testload = new MongoJava("128.4.30.3", 29000);
-		res = testload.mongoDbLoadFloatGzip("testdb", "testcoll", "1234", 0, 2000000000);
-
-		System.out.println(res.size());
-		for (int i=0;i<res.size();i++) {
-			System.out.println(res.get(i).length);
-			for (int j = 0; j < res.get(i).length; j++) {
-				System.out.println(res.get(i)[j]);
-			}
-		}
-		*/
-		
-		
-		//System.out.println(testload.mongoDbDateToLong("2013-02-21_12-25-20-250"));
-
-
 
 
 	}

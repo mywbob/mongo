@@ -19,22 +19,7 @@ import com.mongodb.ServerAddress;
 import com.mongodb.WriteResult;
 
 public class StoreInstanceState {
-	/*
-	public static Date parsingStringtoDate(String s) {
-		SimpleDateFormat ft = new SimpleDateFormat ("yyyy-MM-dd_HH-mm-ss-SSS");
-		String input = s;
-		Date t =null;
 
-		try {
-			t = ft.parse(input);
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}// parse string to date;
-		return t;	
-	}
-	*/
-	
 	public static Date parsingStringtoDate(String s) {
 		DateFormat ft = new SimpleDateFormat ("yyyy-MM-dd_HH-mm-ss-SSS");
 		String input = s;
@@ -124,8 +109,7 @@ public class StoreInstanceState {
 		BasicDBObject updateObj =  new BasicDBObject();
 		updateObj.put("$set", document);
 		try {
-			connectionInfos.getDB(this.database).getCollection(this.collection).update(searchQuery, updateObj);
-			// 	we assume that the document exists... we don't check		
+			connectionInfos.getDB(this.database).getCollection(this.collection).update(searchQuery, updateObj);	
 			searchQuery.put(END_TIME, BasicDBObjectBuilder.start("$lte", value).get());
 			document = new BasicDBObject();
 			document.put(READY_TO_PROCESS, false);		
@@ -186,7 +170,6 @@ public class StoreInstanceState {
 		this.collection = coll;
 		this.customerId = cid;
 		ArrayList<String> res = new ArrayList<String>();
-		//String query = "{ end_time "
 		BasicDBObject searchQuery = (BasicDBObject) new BasicDBObject(SYSTEM_CPU_INFO_EXISTS, new BasicDBObject("$ne", (long)0));
 		searchQuery.put(READY_TO_PROCESS, true);
 		searchQuery.put(IS_MICRO, new BasicDBObject("$ne", (long)1));		
@@ -195,7 +178,7 @@ public class StoreInstanceState {
 		return setStateForQuery(searchQuery);		
 	}
 
-	public ArrayList<String> findRecentEntriesWithMissingCpuInfo(String db, String coll, long oldTime, long cid) {//do i need cid?
+	public ArrayList<String> findRecentEntriesWithMissingCpuInfo(String db, String coll, long oldTime, long cid) {
 		this.database = db;
 		this.collection = coll;
 		this.customerId = cid;
@@ -208,7 +191,7 @@ public class StoreInstanceState {
 	}
 	
 
-	public ArrayList<String> findRecentEntriesWithIsMicro(String db, String coll, long oldTime, long cid) {//do i need cid?
+	public ArrayList<String> findRecentEntriesWithIsMicro(String db, String coll, long oldTime, long cid) {
 		this.database = db;
 		this.collection = coll;
 		this.customerId = cid;
@@ -230,12 +213,9 @@ public class StoreInstanceState {
 		this.endTime = et;
 		BasicDBObject searchQuery = new BasicDBObject();
 		searchQuery.put(INSTANCE_ID, instanceId);		
-		//searchQuery.put(CUSTOMER_ID, customerId);
 		DBObject obj = connectionInfos.getDB(this.database).getCollection(this.collection).findOne(searchQuery);		
-		//System.out.println("end: "+endTime+" start: "+startTime);
-		if (obj != null) {//update the endTime if new endTime is later than the previous one, for a id
-			//System.out.println("going to update");
-			
+
+		if (obj != null) {//update the endTime if new endTime is later than the previous one, for a id		
 			long oldEt = ((BasicDBObject) obj).getLong(END_TIME,-1);
 			long oldSt = ((BasicDBObject) obj).getLong(START_TIME,-1);
 			long oldArchivedTo = ((BasicDBObject) obj).getLong(DATE_ARCHIVED_TO,-2);
@@ -297,8 +277,7 @@ public class StoreInstanceState {
 					try {
 						writeResult = connectionInfos.getDB(this.database).getCollection(this.collection).update(searchQuery, updateObj);
 					}
-					catch (Exception e){//all the exception, may not a good idea, but do not know how to catch socket exception
-						//System.out.println("last error is " + writeResult.getError());//null exception if try faild
+					catch (Exception e){
 						e.printStackTrace();
 						System.out.println("trying to reconnect...");
 						try {//program wait 5 secs, hope the auto reconnect works
@@ -328,8 +307,7 @@ public class StoreInstanceState {
 							connectionInfos.getDB(this.database).getCollection(this.collection).findAndModify(searchQuery, updateObj);
 							success = true;
 						}
-						catch (Exception e){//all the exception, may not a good idea, but do not know how to catch socket exception
-							//System.out.println("last error is " + writeResult.getError());//null exception if try faild
+						catch (Exception e){
 							e.printStackTrace();
 							System.out.println("trying to reconnect...");
 							success = false;
@@ -362,8 +340,7 @@ public class StoreInstanceState {
 				try {
 					writeResult = connectionInfos.getDB(this.database).getCollection(this.collection).insert(document);
 				}
-				catch (Exception e){//all the exception, may not a good idea, but do not know how to catch socket exception
-					//System.out.println("last error is " + writeResult.getError());//null exception if try faild
+				catch (Exception e){
 					e.printStackTrace();
 					System.out.println("trying to reconnect...");
 					try {//program wait 5 secs, hope the auto reconnect works
